@@ -1,0 +1,20 @@
+[project]
+name = "Magician-LOD"
+description = "A tool to create Linked Data from different sources."
+version = "0.0.1"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Luca Martinelli" }]
+dependencies = [
+  "polars",
+  "numpy",
+  "rdflib",
+  "requests",
+  "PyYAML",
+  "jsonmerge",
+  "python-slugify",
+  "alive-progress",
+]
+
+[tool.coverage.run]
+source = ["magician"]
