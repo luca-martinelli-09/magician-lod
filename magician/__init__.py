@@ -6,7 +6,7 @@ from alive_progress import alive_bar
 
 def parse_schema(schema_file):
     # Load the schema
-    print("🔬 LOADING SCHEMA: " + schema_file)
+    print("\n\n🔬 LOADING SCHEMA: " + schema_file)
 
     schema_parent = Path(schema_file).parent.absolute()
     schema = loadSchema(schema_file)
@@ -87,4 +87,5 @@ def parse_schema(schema_file):
             print(f"\t😱 Oh no! Cannot get data!")
 
     # Save the graph
+    print("💾 Saving the RDF graph")
     grapher.save(g)
