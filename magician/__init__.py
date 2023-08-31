@@ -69,15 +69,15 @@ def parse_schema(schema_file):
 
         # Get the data from the sourcer, passing all except for the object map
         print("\n📜 Loading data from source: " + source.get("source"))
+        source_objects = None
         source_objects = sourcer.get_data(
             {k: source[k] for k in source if not k == "object"}
         )
 
         # Create the objects passing the map and the data
-        if source_objects and isinstance(source_objects, list):
+        if source_objects is not None and isinstance(source_objects, list):
             total_objects = len(source_objects)
-            print(f"⚗️ Adding objects")
-            with alive_bar(total_objects) as bar:
+            with alive_bar(total_objects, title="⚗️ Adding objects") as bar:
                 for i, source_object in enumerate(source_objects):
                     source_object["__index"] = i
                     predicator.add_object(

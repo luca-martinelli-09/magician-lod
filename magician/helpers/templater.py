@@ -47,8 +47,22 @@ class Templater:
                 return slugify(txt)
             case "stripall":
                 return self.__remove_suffixes(txt)
+            case "replace":
+                vals = txt.split(";")
+                if vals and len(vals) == 3:
+                    return re.sub(vals[0].strip(), vals[1].strip(), vals[2].strip())
+            case "number":
+                return str(int(txt))
             case "urlencode":
                 return urllib.parse.quote(txt)
+            case "padright":
+                vals = txt.split(";")
+                if vals and len(vals) == 3:
+                    return vals[2].strip().ljust(int(vals[0].strip()), vals[1].strip())
+            case "padleft":
+                vals = txt.split(";")
+                if vals and len(vals) == 3:
+                    return vals[2].strip().rjust(int(vals[0].strip()), vals[1].strip())
             case "md5":
                 return hashlib.md5(txt.encode()).hexdigest()
             case "or":
@@ -60,6 +74,8 @@ class Templater:
                         return vals[1].strip()
             case _:
                 return txt
+
+        return txt
 
     def __get_special(self, type: str) -> str:
         match type:
@@ -90,7 +106,13 @@ class Templater:
         - $ucfirst{{string}} -> uppercase only first letter
         - $ucword{{string}} -> uppercase only the first letter of each word
 
-        - $or{{1;2}} -> if 1 is void, use 2
+        - $replace{{target ; replacement ; text}} -> replace target with replacement in text
+        - $padright{{length ; fill ; text}} -> pad text on right, using length and fill
+        - $padleft{{string}} -> same as padright, but on left
+
+        - $number{{string}} -> convert to number
+
+        - $or{{option1 ; option2}} -> if option1 is void, use option2
 
         - $slug{{string}} -> create slug
 
