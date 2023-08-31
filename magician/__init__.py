@@ -16,10 +16,12 @@ def parse_schema(schema_file):
 
     # Merge export information with the default one
     export = merge({
+        'parent': './',
         'name': 'export',
         'formats': ['xml']
     }, export)
-    export_filename = schema_parent.joinpath(export.get('name'))
+    export_path = schema_parent.joinpath(export.get("parent"))
+    export_filename = export_path.joinpath(export.get('name'))
     export_formats = export.get('formats')
 
     # Initialize the templater
