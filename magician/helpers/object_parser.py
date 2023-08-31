@@ -87,7 +87,7 @@ class ObjectParser():
                 language = predicate_map.get("language")
 
                 # Create the literal
-                if val and val != '':
+                if val is not None and val != '':
                     predicate_object = Literal(
                         val,
                         lang=language if not datatype else None,
@@ -104,7 +104,7 @@ class ObjectParser():
                 predicate_object = None
                 # If the value is specified, create the URI using the templater, the urifier
                 # Add the default prefix if noone is specified.
-                if val:
+                if val is not None:
                     if default_prefix and not val.find(":") >= 0:
                         val = default_prefix + ":" + val
 
@@ -127,15 +127,19 @@ class ObjectParser():
 
         return tuples
 
-    def add_object(self, object: dict, data: dict = {}) -> URIRef:
+    def add_object(self, object: dict, data: dict = {}) -> URIRef | None:
         # Generate the URI using the templater and the urifier
         object_uri = self.__urifier.get_uri(self.__templater.fill(
             object.get("uri"), data
         ))
 
+        condition = object.get("if")
+        if condition and len(self.__templater.fill(condition, data)) <= 0:
+            return None
+
         # Get the object types
         object_types = object.get("as")
-        if object_types:
+        if object_types is not None:
             if not isinstance(object_types, list):
                 object_types = [object_types]
 
@@ -151,7 +155,7 @@ class ObjectParser():
 
         # Add the predicates
         predicates: dict = object.get("predicates")
-        if predicates:
+        if predicates is not None:
             for predicate, predicate_value in predicates.items():
                 self.add_predicate(
                     predicate, predicate_value, object_uri, data
@@ -216,7 +220,7 @@ class ObjectParser():
 
                     # And add them to the graph
                     for predicate_subject, predicate_object in tuples:
-                        if predicate_subject and predicate_object:
+                        if predicate_subject is not None and predicate_object is not None:
                             self.__g.add((
                                 predicate_subject, predicate_uri, predicate_object
                             ))

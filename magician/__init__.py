@@ -76,15 +76,24 @@ def parse_schema(schema_file):
             {k: source[k] for k in source if not k == "object"}
         )
 
+        object_schemas = source.get("object")
+        if isinstance(object_schemas, dict):
+            object_schemas = [object_schemas]
+
         # Create the objects passing the map and the data
         if source_objects is not None and isinstance(source_objects, list):
-            total_objects = len(source_objects)
+            total_objects = len(source_objects) * len(object_schemas)
             with alive_bar(total_objects, title="⚗️ Adding objects") as bar:
-                for i, source_object in enumerate(source_objects):
-                    source_object["__index"] = i
-                    predicator.add_object(
-                        source.get("object"), source_object)
-                    bar()
+                for object_schema in object_schemas:
+                    for i, source_object in enumerate(source_objects):
+                        source_object["__index"] = i
+                        
+                        predicator.add_object(
+                            object_schema, source_object
+                        )
+                        
+                        # Update progress bar
+                        bar()
         else:
             print(f"\t😱 Oh no! Cannot get data!")
 

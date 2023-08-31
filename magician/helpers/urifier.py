@@ -16,7 +16,7 @@ class Urifier:
             self.__namespaces[binding] = str(bind_namespace)
 
         # Set namespace
-        if namespace:
+        if namespace is not None:
             if not namespace.endswith("/"):
                 namespace += "/"
 

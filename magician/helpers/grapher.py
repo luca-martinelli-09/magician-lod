@@ -23,7 +23,7 @@ class Grapher:
         self.__bindings = bindings
 
         # Set namespace
-        if namespace:
+        if namespace is not None:
             if not namespace.endswith("/"):
                 namespace += "/"
 
