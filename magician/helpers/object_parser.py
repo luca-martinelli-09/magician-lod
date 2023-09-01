@@ -15,15 +15,19 @@ class ObjectParser():
     __predicates_map: Dict[str, dict] = None
     __templater: Templater = None
     __urifier: Urifier = None
+    __object_templates: None | dict = None
     __g: Graph = None
 
-    def __init__(self, g: Graph, predicates_map: Dict[str, dict] | None, templater: Templater, urifier: Urifier) -> None:
+    def __init__(self, g: Graph, predicates_map: Dict[str, dict] | None, templater: Templater, urifier: Urifier,
+                 object_templates: dict = None) -> None:
         self.__g = g
         self.__predicates_map = predicates_map
         self.__templater = templater
         self.__urifier = urifier
+        self.__object_templates = object_templates
 
-    def __parse_predicate(self, predicate_map: dict, predicate_subject: URIRef, data: dict) -> Tuple[URIRef, URIRef | Literal]:
+    def __parse_predicate(self, predicate_map: dict, predicate_subject: URIRef, data: dict) -> list[Tuple[
+        URIRef, URIRef | Literal]]:
         predicate_object = None
 
         # Get the default value, if it's exists.
@@ -128,6 +132,10 @@ class ObjectParser():
         return tuples
 
     def add_object(self, object: dict, data: dict = {}) -> URIRef | None:
+        object_template = object.get("template")
+        if object_template and self.__object_templates is not None and object_template in self.__object_templates:
+            object = merge(self.__object_templates[object_template], object)
+
         # Generate the URI using the templater and the urifier
         object_uri = self.__urifier.get_uri(self.__templater.fill(
             object.get("uri"), data

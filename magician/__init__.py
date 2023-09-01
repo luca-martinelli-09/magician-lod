@@ -47,6 +47,7 @@ def parse_schema(schema_file):
         schema.get("predicates_map", {}),
         templater,
         urifier,
+        schema.get("object_templates")
     )
 
     # Parse individuals
@@ -87,11 +88,11 @@ def parse_schema(schema_file):
                 for object_schema in object_schemas:
                     for i, source_object in enumerate(source_objects):
                         source_object["__index"] = i
-                        
+
                         predicator.add_object(
                             object_schema, source_object
                         )
-                        
+
                         # Update progress bar
                         bar()
         else:

@@ -17,7 +17,7 @@ class Grapher:
     def __init__(self,
                  namespace: str,
                  bindings: Dict[str, str],
-                 filename: str = "export",
+                 filename: str | Path = "export",
                  formats: list[str] = ["xml"]
                  ):
         self.__bindings = bindings
