@@ -4,11 +4,13 @@ from .helpers import loadSchema, Grapher, Urifier, Templater, ObjectParser, Sour
 from alive_progress import alive_bar
 
 
-def parse_schema(schema_file):
-    # Load the schema
-    print("\n\n🔬 LOADING SCHEMA: " + schema_file)
+def parse_schema(schema_file: str | Path):
+    schema_file = Path(schema_file)
 
-    schema_parent = Path(schema_file).parent.absolute()
+    # Load the schema
+    print("\n\n🔬 LOADING SCHEMA: " + schema_file.name)
+
+    schema_parent = schema_file.parent.absolute()
     schema = loadSchema(schema_file)
 
     # Export information
@@ -73,9 +75,12 @@ def parse_schema(schema_file):
         # Get the data from the sourcer, passing all except for the object map
         print("\n📜 Loading data from source: " + source.get("source"))
         source_objects = None
-        source_objects = sourcer.get_data(
-            {k: source[k] for k in source if not k == "object"}
-        )
+        try:
+            source_objects = sourcer.get_data(
+                {k: source[k] for k in source if not k == "object"}
+            )
+        except:
+            pass
 
         object_schemas = source.get("object")
         if isinstance(object_schemas, dict):

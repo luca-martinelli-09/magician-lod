@@ -50,7 +50,7 @@ class Templater:
             case "replace":
                 vals = txt.split(";")
                 if vals and len(vals) == 3:
-                    return re.sub(vals[0].strip(), vals[1].strip(), vals[2].strip())
+                    return re.sub(vals[0].strip(), vals[1].strip(), vals[2].strip()).replace("\\s", " ")
             case "number":
                 return str(int(txt))
             case "urlencode":
@@ -65,6 +65,8 @@ class Templater:
                     return vals[2].strip().rjust(int(vals[0].strip()), vals[1].strip())
             case "md5":
                 return hashlib.md5(txt.encode()).hexdigest()
+            case "eval":
+                return str(eval(txt))
             case "or":
                 vals = txt.split(";")
                 if vals and len(vals) == 2:

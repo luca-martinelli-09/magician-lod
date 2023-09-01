@@ -27,7 +27,7 @@ class ObjectParser():
         self.__object_templates = object_templates
 
     def __parse_predicate(self, predicate_map: dict, predicate_subject: URIRef, data: dict) -> list[Tuple[
-        URIRef, URIRef | Literal]]:
+            URIRef, URIRef | Literal]]:
         predicate_object = None
 
         # Get the default value, if it's exists.
@@ -55,23 +55,25 @@ class ObjectParser():
         values = [value]
 
         # If split_on and split_by are specified, split the content and use it for the values.
+        has_split = False
         if predicate_map.get("split_on") and predicate_map.get("split_by"):
             split_on = self.__templater.fill(
                 predicate_map.get("split_on"), data
             )
             values = split_on.split(predicate_map.get("split_by"))
+            has_split = True
 
         # Do the same if specified an iterate_on_attribute
         if predicate_map.get("iterate_on_attribute"):
             values = data.get(predicate_map.get("iterate_on_attribute"), [])
+            has_split = True
 
         # Conditions to continue
-        if predicate_map.get("if"):
-            condition = self.__templater.fill(
-                predicate_map.get("if", ""), data
-            ).strip()
-            if len(condition) <= 0:
-                return []
+        condition = self.__templater.fill(
+            predicate_map["if"], data
+        ).strip() if "if" in predicate_map else None
+        if condition is not None and (len(condition) <= 0 or condition.lower() == 'false'):
+            return []
 
         # Store the list of tuples
         tuples = []
@@ -81,7 +83,8 @@ class ObjectParser():
             # Add the split information on the data dictionary, in order to use it in the templater
             # When using iterate_on_attribute, if "val" is a dictionary in the templater we can also use subkeys, like {{_split.subkey}}
             split_data = data.copy()
-            split_data["__split"] = val
+            if has_split:
+                split_data["__split"] = val
 
             # TYPE IS LITERAL
             if predicate_type == "literal":
@@ -132,17 +135,30 @@ class ObjectParser():
         return tuples
 
     def add_object(self, object: dict, data: dict = {}) -> URIRef | None:
-        object_template = object.get("template")
-        if object_template and self.__object_templates is not None and object_template in self.__object_templates:
-            object = merge(self.__object_templates[object_template], object)
+        # Merge with templates
+        if self.__object_templates is not None:
+            object_templates = object.get("template")
+            if object_templates and not isinstance(object_templates, list):
+                object_templates = [object_templates]
+
+            if object_templates:
+                for object_template in object_templates:
+                    object = merge(
+                        self.__object_templates.get(
+                            object_template, {}
+                        ), object
+                    )
 
         # Generate the URI using the templater and the urifier
         object_uri = self.__urifier.get_uri(self.__templater.fill(
             object.get("uri"), data
         ))
 
-        condition = object.get("if")
-        if condition and len(self.__templater.fill(condition, data)) <= 0:
+        # Check if can create the object or not
+        condition = self.__templater.fill(
+            object["if"], data
+        ).strip() if "if" in object else None
+        if condition is not None and (len(condition) <= 0 or condition.lower() == 'false'):
             return None
 
         # Get the object types
