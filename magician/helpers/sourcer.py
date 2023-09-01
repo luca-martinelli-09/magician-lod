@@ -120,12 +120,11 @@ class Sourcer():
             for col, func in group_agg.items():
                 pl_col = pl.col(col)
 
-                if func == "sum":
-                    pl_col = pl_col.cast(pl.Float64).sum().cast(str)
-                elif func == "count":
-                    pl_col = pl_col.count().cast(str)
-                elif func == "avg":
-                    pl_col = pl_col.cast(pl.Float64).mean().cast(str)
+                try:
+                    agg_func = getattr(pl_col.cast(pl.Float64), func)
+                    pl_col = agg_func().cast(str)
+                except:
+                    pass
 
                 aggregations.append(pl_col)
 
