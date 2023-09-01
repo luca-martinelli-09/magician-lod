@@ -51,8 +51,12 @@ class Templater:
                 vals = txt.split(";")
                 if vals and len(vals) == 3:
                     return re.sub(vals[0].strip(), vals[1].strip(), vals[2].strip()).replace("\\s", " ")
+            case "int":
+                return str(int(txt))
             case "number":
                 return str(int(txt))
+            case "float":
+                return str(float(txt))
             case "urlencode":
                 return urllib.parse.quote(txt)
             case "padright":

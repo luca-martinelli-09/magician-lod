@@ -82,8 +82,6 @@ class Sourcer():
         elif format == "xls":
             df = pl.read_excel(source)
 
-        print(df)
-
         # Join with other dataframes
         joins_info = schema.get("join")
         if not isinstance(joins_info, list):
@@ -109,6 +107,33 @@ class Sourcer():
                         )
                     except:
                         pass
+
+        if schema.get("group_by") is not None and schema.get("group_agg") is not None:
+            group_by = schema.get("group_by")
+            group_agg: dict = schema.get("group_agg")
+
+            if not isinstance(group_by, list):
+                group_by = [group_by]
+
+            aggregations = []
+
+            for col, func in group_agg.items():
+                pl_col = pl.col(col)
+
+                if func == "sum":
+                    pl_col = pl_col.cast(pl.Float64).sum().cast(str)
+                elif func == "count":
+                    pl_col = pl_col.count().cast(str)
+                elif func == "avg":
+                    pl_col = pl_col.cast(pl.Float64).mean().cast(str)
+
+                aggregations.append(pl_col)
+
+                print(func)
+
+            df = df.groupby(group_by).agg(aggregations)
+
+        print(df)
 
         return df if as_df else df.to_dicts()
 
