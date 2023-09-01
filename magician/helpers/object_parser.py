@@ -26,6 +26,23 @@ class ObjectParser():
         self.__urifier = urifier
         self.__object_templates = object_templates
 
+    def __validate_condition(self, schema: dict, data: dict) -> bool:
+        conditions = schema.get("if")
+
+        if conditions is None:
+            return True
+
+        if not isinstance(conditions, list):
+            conditions = [conditions]
+
+        for condition in conditions:
+            validation = self.__templater.fill(condition, data).strip()
+
+            if len(validation) <= 0 or validation.lower() == 'false':
+                return False
+
+        return True
+
     def __parse_predicate(self, predicate_map: dict, predicate_subject: URIRef, data: dict) -> list[Tuple[
             URIRef, URIRef | Literal]]:
         predicate_object = None
@@ -69,10 +86,7 @@ class ObjectParser():
             has_split = True
 
         # Conditions to continue
-        condition = self.__templater.fill(
-            predicate_map["if"], data
-        ).strip() if "if" in predicate_map else None
-        if condition is not None and (len(condition) <= 0 or condition.lower() == 'false'):
+        if not self.__validate_condition(predicate_map, data):
             return []
 
         # Store the list of tuples
@@ -155,10 +169,7 @@ class ObjectParser():
         ))
 
         # Check if can create the object or not
-        condition = self.__templater.fill(
-            object["if"], data
-        ).strip() if "if" in object else None
-        if condition is not None and (len(condition) <= 0 or condition.lower() == 'false'):
+        if not self.__validate_condition(object, data):
             return None
 
         # Get the object types
