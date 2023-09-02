@@ -67,6 +67,13 @@ class Templater:
                 vals = txt.split(";")
                 if vals and len(vals) == 3:
                     return vals[2].strip().rjust(int(vals[0].strip()), vals[1].strip())
+            case "formatdate":
+                vals = txt.split(";")
+                if vals and len(vals) == 3:
+                    try:
+                        return datetime.strftime(datetime.strptime(vals[0].strip(), vals[1].strip()), vals[2].strip())
+                    except:
+                        return ''
             case "md5":
                 return hashlib.md5(txt.encode()).hexdigest()
             case "eval":
@@ -93,6 +100,8 @@ class Templater:
                 return datetime.now().isoformat(timespec="seconds")
             case "date":
                 return datetime.now().date().isoformat()
+            case "year":
+                return str(datetime.now().year)
             case "time":
                 return datetime.now().time().isoformat(timespec="seconds")
             case _:
@@ -116,7 +125,9 @@ class Templater:
         - $padright{{length ; fill ; text}} -> pad text on right, using length and fill
         - $padleft{{string}} -> same as padright, but on left
 
-        - $number{{string}} -> convert to number
+        - $number{{string}} -> convert to integer
+        - $int{{string}} -> alias for number
+        - $float{{string}} -> convert to float
 
         - $or{{option1 ; option2}} -> if option1 is void, use option2
 
@@ -124,11 +135,14 @@ class Templater:
 
         - $md5{{string}} -> generate md5
 
+        - $formatdate{{date ; source_format ; target_format}} -> reformat date
+
         Special variables:
         - {% uuid %} -> generate a random uuid
         - {% timestamp %} -> current timestamp
         - {% datetime %} -> current datetime in ISO format
         - {% date %} -> current date in format YYYY-MM-DD
+        - {% year %} -> current year in format YYYY
         - {% time %} -> current time in format HH:mm
 
         Special variables passed by the Predicator:

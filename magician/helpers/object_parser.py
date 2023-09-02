@@ -3,6 +3,7 @@ from typing import Dict, Any
 from rdflib import Graph, URIRef, Literal
 from rdflib.namespace import RDF
 from typing import Tuple
+import re
 
 from . import Urifier, Templater
 
@@ -37,7 +38,7 @@ class ObjectParser():
 
         for condition in conditions:
             validation = self.__templater.fill(condition, data).strip()
-
+            
             if len(validation) <= 0 or validation.lower() == 'false':
                 return False
 
@@ -60,12 +61,9 @@ class ObjectParser():
         predicate_type: str = predicate_map.get("type")
 
         # Get the value, (default one if not specified) and fill it with the data using the templator.
-        value = self.__templater.fill(
-            predicate_map.get(
-                value_key.get(predicate_type, "value"),
-                default_value
-            ),
-            data
+        value = predicate_map.get(
+            value_key.get(predicate_type, "value"),
+            default_value
         )
 
         # Create a list of values, in order to use also splits and iterators
@@ -73,10 +71,13 @@ class ObjectParser():
 
         # If split_on and split_by are specified, split the content and use it for the values.
         has_split = False
-        if predicate_map.get("split_on") and predicate_map.get("split_by"):
+        split_on = None
+        if predicate_map.get("split_on"):
             split_on = self.__templater.fill(
                 predicate_map.get("split_on"), data
             )
+
+        if split_on is not None and predicate_map.get("split_by"):
             values = split_on.split(predicate_map.get("split_by"))
             has_split = True
 
@@ -85,20 +86,32 @@ class ObjectParser():
             values = data.get(predicate_map.get("iterate_on_attribute"), [])
             has_split = True
 
-        # Conditions to continue
-        if not self.__validate_condition(predicate_map, data):
-            return []
+        # Do the same if specified an split_match
+        if split_on is not None and predicate_map.get("split_match"):
+            matches: re.Match[str] | None = re.match(
+                predicate_map.get("split_match"), split_on
+            )
+            values = matches.groups() if matches else []
+            has_split = True
 
         # Store the list of tuples
         tuples = []
 
         # Iterate over the values
-        for val in values:
+        for val_i, val in enumerate(values):
             # Add the split information on the data dictionary, in order to use it in the templater
             # When using iterate_on_attribute, if "val" is a dictionary in the templater we can also use subkeys, like {{_split.subkey}}
             split_data = data.copy()
             if has_split:
                 split_data["__split"] = val
+                split_data["__split_" + str(val_i)] = val
+            
+            # Conditions to continue
+            if not self.__validate_condition(predicate_map, split_data):
+                continue
+
+            # Fill with split
+            split_val = self.__templater.fill(value, split_data)
 
             # TYPE IS LITERAL
             if predicate_type == "literal":
@@ -108,9 +121,9 @@ class ObjectParser():
                 language = predicate_map.get("language")
 
                 # Create the literal
-                if val is not None and val != '':
+                if split_val is not None and split_val.strip() != '':
                     predicate_object = Literal(
-                        val,
+                        split_val,
                         lang=language if not datatype else None,
                         datatype=self.__urifier.get_uri(
                             "xsd:" + datatype
@@ -124,13 +137,13 @@ class ObjectParser():
 
                 predicate_object = None
                 # If the value is specified, create the URI using the templater, the urifier
-                # Add the default prefix if noone is specified.
-                if val is not None:
-                    if default_prefix and not val.find(":") >= 0:
-                        val = default_prefix + ":" + val
+                # Add the default prefix if noone is specified.(
+                if split_val is not None and split_val.strip() != '':
+                    if default_prefix and not split_val.find(":") >= 0:
+                        split_val = default_prefix + ":" + split_val
 
                     predicate_object = self.__urifier.get_uri(self.__templater.fill(
-                        val, split_data
+                        split_val, split_data
                     ))
 
             # TYPE IS AN OBJECT
