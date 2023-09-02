@@ -52,11 +52,23 @@ class Templater:
                 if vals and len(vals) == 3:
                     return re.sub(vals[0].strip(), vals[1].strip(), vals[2].strip()).replace("\\s", " ")
             case "int":
-                return str(int(txt))
+                vals = txt.split(";")
+                try:
+                    return str(int(float(vals[0].strip())))
+                except:
+                    return vals[1].strip() if len(vals) > 0 else ''
             case "number":
-                return str(int(txt))
+                vals = txt.split(";")
+                try:
+                    return str(int(float(vals[0].strip())))
+                except:
+                    return vals[1].strip() if len(vals) > 0 else ''
             case "float":
-                return str(float(txt))
+                vals = txt.split(";")
+                try:
+                    return str(float(vals[0].strip()))
+                except:
+                    return vals[1].strip() if len(vals) > 0 else ''
             case "urlencode":
                 return urllib.parse.quote(txt)
             case "padright":
