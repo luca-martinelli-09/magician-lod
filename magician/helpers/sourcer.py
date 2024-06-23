@@ -32,9 +32,9 @@ class Sourcer():
 
             # Replace namespaces
             try:
-                match = re.search("^{(\S+)}", child_tag)
+                match = re.search(r"^{(\S+)}", child_tag)
                 if match and match.group(1) and match.group(1) in inverted_namespaces:
-                    child_tag = re.sub("^{(\S+)}",
+                    child_tag = re.sub(r"^{(\S+)}",
                                        lambda match: (
                                            inverted_namespaces[
                                                match.group(1)

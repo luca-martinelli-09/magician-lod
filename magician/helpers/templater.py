@@ -31,7 +31,7 @@ class Templater:
         return current
 
     def __remove_suffixes(self, txt: str) -> str:
-        return re.sub("[^A-Za-z0-9]+$", "", txt).strip()
+        return re.sub(r"[^A-Za-z0-9]+$", "", txt).strip()
 
     def __exec_func(self, func: str, txt: str) -> str:
         match func:
@@ -164,16 +164,16 @@ class Templater:
         """
 
         # Variables
-        txt = re.sub("{{([^}{$]+)}}",
+        txt = re.sub(r"{{([^}{$]+)}}",
                      lambda match: self.__get_from_dict(data, match.group(1).strip()).strip(), txt)
 
         # Special variables
-        txt = re.sub("{%([^}{$%]+)%}",
+        txt = re.sub(r"{%([^}{$%]+)%}",
                      lambda match: self.__get_special(match.group(1).strip()).strip(), txt)
 
         # Functions
-        while re.search("\$(\w+){{([^}{$]+)}}", txt):
-            txt = re.sub("\$(\w+){{([^}{$]+)}}",
+        while re.search(r"\$(\w+){{([^}{$]+)}}", txt):
+            txt = re.sub(r"\$(\w+){{([^}{$]+)}}",
                          lambda match: self.__exec_func(match.group(1), match.group(2).strip()), txt)
 
         return txt.strip()

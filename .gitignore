@@ -4,3 +4,5 @@ __pycache__
 schema
 test
 test.py
+*.egg-info
+build
